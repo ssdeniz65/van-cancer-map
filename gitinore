@@ -1,0 +1,7 @@
+# Ham hasta verisi repoya girmez
+*.xlsx
+*.xls
+
+__pycache__/
+*.pyc
+.DS_Store
