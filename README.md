@@ -2,7 +2,7 @@
 
 VANKANSER veri setindeki 2.081 kanser vakasının Van ilçelerine, kanser türüne, cinsiyete ve yaşa göre dağılımını gösteren etkileşimli harita.
 
-![Ekran görüntüsü](docs/screenshot.png)
+![Ekran görüntüsü](screenshot.png)
 
 ## İçerik
 
@@ -12,41 +12,36 @@ VANKANSER veri setindeki 2.081 kanser vakasının Van ilçelerine, kanser türü
 - Kanser türlerinin cinsiyete göre dağılımı, tanı yaşı dağılımı, yıllara göre vaka sayısı ve sıralanabilir tablo.
 - Filtreler: kanser türü, cinsiyet, yaş grubu.
 
-Harita tek dosyadır: `docs/index.html` dosyasını tarayıcıda açmak yeterli (d3 cdnjs'den yüklenir, internet gerekir).
+Harita tek dosyadır: `index.html` dosyasını tarayıcıda açmak yeterli (d3 cdnjs'den yüklenir, internet gerekir).
 
-## Klasör yapısı
+## Dosyalar
 
-```
-data/
-  aggregated.json   haritanın kullandığı toplulaştırılmış veri küpü
-  ilce_ozet.csv     ilçe bazında özet tablo
-  raw/              ham Excel buraya konur (git'e girmez)
-docs/
-  index.html        üretilmiş harita (GitHub Pages için)
-geo/
-  provinces.json    Van ve komşu il sınırları
-  lakes.json        Van Gölü ve Erçek Gölü
-scripts/
-  prep.py           ham Excel → data/aggregated.json + data/ilce_ozet.csv
-  build.py          src/template.html + veri → docs/index.html
-src/
-  template.html     harita şablonu (HTML/CSS/JS, d3 v7)
-```
+| Dosya | İçerik |
+|---|---|
+| `index.html` | Üretilmiş harita (tek dosya, tarayıcıda açılır) |
+| `template.html` | Harita şablonu (HTML/CSS/JS, d3 v7) |
+| `aggregated.json` | Haritanın kullandığı toplulaştırılmış veri küpü |
+| `ilce_ozet.csv` | İlçe bazında özet tablo |
+| `provinces.json` | Van ve komşu il sınırları |
+| `lakes.json` | Van Gölü ve Erçek Gölü |
+| `prep.py` | Ham Excel → `aggregated.json` + `ilce_ozet.csv` |
+| `build.py` | `template.html` + veri → `index.html` |
+| `screenshot.png` | Ekran görüntüsü |
 
 ## Yeniden üretme
 
 ```bash
 pip install pandas openpyxl
-# ham dosyayı data/raw/ altına koyun
-python scripts/prep.py data/raw/VANKANSER-1.xlsx
-python scripts/build.py
+# ham dosyayı repo klasörüne koyun (git'e girmez)
+python prep.py VANKANSER-1.xlsx
+python build.py
 ```
 
 Ham Excel'in beklenen sütunları: `İL, İLÇE, CİNSİYET, YAŞ, TARİH, TOPOLOJİ`.
 
 ## Veri gizliliği
 
-Ham veri (hasta düzeyinde kayıtlar) bu repoda **yoktur**; `data/raw/` ve `*.xlsx` dosyaları `.gitignore` ile dışarıda tutulur. Repoda ve haritada yalnızca ilçe × cinsiyet × 5 yıllık yaş grubu × yıl × tür bazında toplulaştırılmış vaka sayıları bulunur. Bazı hücrelerde vaka sayısı 1–2 olduğundan repo herkese açılmadan önce küçük hücrelerin bastırılması (ör. n<5) değerlendirilmelidir.
+Ham veri (hasta düzeyinde kayıtlar) bu repoda **yoktur**; `*.xlsx` dosyaları `.gitignore` ile dışarıda tutulur. Repoda ve haritada yalnızca ilçe × cinsiyet × 5 yıllık yaş grubu × yıl × tür bazında toplulaştırılmış vaka sayıları bulunur. Bazı hücrelerde vaka sayısı 1–2 olduğundan repo herkese açılmadan önce küçük hücrelerin bastırılması (ör. n<5) değerlendirilmelidir.
 
 ## Yöntem ve sınırlılıklar
 

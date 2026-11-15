@@ -1,13 +1,13 @@
 """Ham Excel'den toplulaştırılmış veri üretir.
 
 Kullanım:
-    python scripts/prep.py data/raw/VANKANSER-1.xlsx
+    python prep.py VANKANSER-1.xlsx
 
 Çıktılar:
-    data/aggregated.json  -> haritanın kullandığı küp (ilçe × cinsiyet × 5 yıllık yaş grubu × yıl × tür → vaka)
-    data/ilce_ozet.csv     -> ilçe bazında özet (vaka, nüfus, ham hız, en sık türler)
+    aggregated.json  -> haritanın kullandığı küp (ilçe × cinsiyet × 5 yıllık yaş grubu × yıl × tür → vaka)
+    ilce_ozet.csv     -> ilçe bazında özet (vaka, nüfus, ham hız, en sık türler)
 
-Ham veri (hasta düzeyinde kayıtlar) repoya girmez; data/raw/ .gitignore'dadır.
+Ham veri (hasta düzeyinde kayıtlar) repoya girmez; *.xlsx .gitignore'dadır.
 """
 import json
 import sys
@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent
 
 # TÜİK ADNKS 2017 (kadın, erkek) — İŞKUR Van İl İşgücü Piyasası Raporu 2017, Tablo 1
 # MERKEZ = İpekyolu + Tuşba
@@ -65,8 +65,7 @@ def main(xlsx: str) -> None:
     ]
     out = {"districts": districts, "types": types,
            "fields": ["district", "sex", "agebin", "year", "type", "n"], "cube": rows}
-    (ROOT / "data").mkdir(exist_ok=True)
-    (ROOT / "data/aggregated.json").write_text(
+    (ROOT / "aggregated.json").write_text(
         json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
     years = PERIOD[1] - PERIOD[0] + 1
@@ -86,7 +85,7 @@ def main(xlsx: str) -> None:
             "erkek": int((sub["sex"] == 1).sum()),
             "en_sik_3_tur": "; ".join(f"{t} ({n})" for t, n in top.items()),
         })
-    pd.DataFrame(summ).to_csv(ROOT / "data/ilce_ozet.csv", index=False, encoding="utf-8-sig")
+    pd.DataFrame(summ).to_csv(ROOT / "ilce_ozet.csv", index=False, encoding="utf-8-sig")
     print(f"{len(d)} kayıt → {len(rows)} küp hücresi; {len(districts)} ilçe, {len(types)} tür")
 
 
