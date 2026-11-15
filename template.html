@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Van İli Kanser Haritası (2013–2018)</title>
+<style>
+.viz-root{
+  color-scheme: light;
+  --page:#f9f9f7; --surface-1:#fcfcfb; --text-primary:#0b0b0b; --text-secondary:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --border:rgba(11,11,11,0.10);
+  --land:#f0efec; --land-other:#f6f5f2; --lake:#dbe7f3; --lake-stroke:#b7cde4;
+  --s1:#cde2fb; --s2:#9ec5f4; --s3:#5598e7; --s4:#256abf; --s5:#104281;
+  --mid:#f0efec; --red1:#f2b8b5; --red2:#e34948; --red3:#a82a2a; --blue1:#b7d3f6; --blue2:#3987e5; --blue3:#1c5cab;
+  --women:#2a78d6; --men:#eb6834;
+  --bubble-ring:#fcfcfb;
+}
+@media (prefers-color-scheme: dark){
+  :root:where(:not([data-theme="light"])) .viz-root{
+    color-scheme: dark;
+    --page:#0d0d0d; --surface-1:#1a1a19; --text-primary:#f0efec; --text-secondary:#c3c2b7; --muted:#898781;
+    --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,0.10);
+    --land:#262624; --land-other:#1f1f1e; --lake:#1b2a3a; --lake-stroke:#2b4560;
+    --s1:#184f95; --s2:#256abf; --s3:#3987e5; --s4:#86b6ef; --s5:#cde2fb;
+    --mid:#383835; --red1:#7a3434; --red2:#c94848; --red3:#e66767; --blue1:#1f4a7d; --blue2:#2a78d6; --blue3:#6da7ec;
+    --women:#3987e5; --men:#d95926; --bubble-ring:#1a1a19;
+  }
+}
+:root[data-theme="dark"] .viz-root{
+    color-scheme: dark;
+    --page:#0d0d0d; --surface-1:#1a1a19; --text-primary:#f0efec; --text-secondary:#c3c2b7; --muted:#898781;
+    --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,0.10);
+    --land:#262624; --land-other:#1f1f1e; --lake:#1b2a3a; --lake-stroke:#2b4560;
+    --s1:#184f95; --s2:#256abf; --s3:#3987e5; --s4:#86b6ef; --s5:#cde2fb;
+    --mid:#383835; --red1:#7a3434; --red2:#c94848; --red3:#e66767; --blue1:#1f4a7d; --blue2:#2a78d6; --blue3:#6da7ec;
+    --women:#3987e5; --men:#d95926; --bubble-ring:#1a1a19;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.viz-root{background:var(--page);color:var(--text-primary);min-height:100vh;padding:28px 20px 48px}
+.wrap{max-width:1180px;margin:0 auto}
+h1{font-size:26px;margin:0 0 6px;font-weight:650;letter-spacing:-.01em}
+.sub{color:var(--text-secondary);margin:0 0 22px;font-size:14px;line-height:1.5;max-width:820px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:var(--surface-1);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.kpi .l{font-size:12px;color:var(--text-secondary)}
+.kpi .v{font-size:26px;font-weight:650;margin-top:4px}
+.kpi .n{font-size:12px;color:var(--muted);margin-top:2px}
+.filters{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;background:var(--surface-1);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:18px;position:sticky;top:0;z-index:5}
+.f label{display:block;font-size:11px;color:var(--text-secondary);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+select{font:inherit;font-size:14px;padding:6px 8px;border-radius:8px;border:1px solid var(--axis);background:var(--surface-1);color:var(--text-primary)}
+.seg{display:inline-flex;border:1px solid var(--axis);border-radius:8px;overflow:hidden}
+.seg button{font:inherit;font-size:13px;padding:6px 10px;border:0;background:transparent;color:var(--text-secondary);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--text-primary);color:var(--surface-1)}
+.card{background:var(--surface-1);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:18px}
+.card h2{font-size:16px;margin:0 0 4px;font-weight:620}
+.card .cap{font-size:13px;color:var(--text-secondary);margin:0 0 12px;line-height:1.45}
+.grid2{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:18px}
+@media (max-width:900px){.grid2{grid-template-columns:1fr}}
+svg text{fill:var(--text-secondary);font-size:11px}
+.axis path,.axis line{stroke:var(--axis)}
+.axis text{fill:var(--muted);font-variant-numeric:tabular-nums}
+.gridl line{stroke:var(--grid)}
+.gridl path{display:none}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--text-secondary);align-items:center;margin-top:8px}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:5px}
+.tip{position:fixed;pointer-events:none;background:var(--surface-1);color:var(--text-primary);border:1px solid var(--border);box-shadow:0 6px 24px rgba(0,0,0,.14);border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.45;opacity:0;transition:opacity .08s;z-index:20;max-width:260px}
+.tip b{font-weight:650}
+.tip .row{display:flex;justify-content:space-between;gap:14px;font-variant-numeric:tabular-nums}
+.tip .m{color:var(--text-secondary)}
+table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{padding:6px 8px;border-bottom:1px solid var(--grid);text-align:right}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--text-secondary);font-weight:600;cursor:pointer;user-select:none}
+details summary{cursor:pointer;font-weight:600;font-size:14px}
+.note{font-size:12.5px;color:var(--text-secondary);line-height:1.55}
+.note li{margin-bottom:4px}
+.rank-row{cursor:default}
+</style>
+</head>
+<body>
+<div class="viz-root">
+<div class="wrap">
+  <h1>Van İli Kanser Haritası</h1>
+  <p class="sub">VANKANSER veri setindeki <b>2.081 kanser vakasının</b> ilçelere, kanser türüne, cinsiyete ve yaşa göre dağılımı. Hızlar, 2013–2018 dönemindeki vakaların TÜİK 2017 ilçe nüfusuna bölünmesiyle hesaplanan <b>yıllık ham hızlardır (100.000 kişide)</b>.</p>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="filters" role="group" aria-label="Filtreler">
+    <div class="f"><label for="fType">Kanser türü</label><select id="fType"></select></div>
+    <div class="f"><label>Cinsiyet</label><div class="seg" id="fSex"><button data-v="all" aria-pressed="true">Tümü</button><button data-v="0" aria-pressed="false">Kadın</button><button data-v="1" aria-pressed="false">Erkek</button></div></div>
+    <div class="f"><label for="fAge">Yaş grubu</label><select id="fAge"><option value="all">Tümü</option><option value="0-39">0–39</option><option value="40-59">40–59</option><option value="60-74">60–74</option><option value="75-200">75+</option></select></div>
+    <div class="f"><label>Harita rengi</label><div class="seg" id="fMetric"><button data-v="rate" aria-pressed="true">Hız /100 bin</button><button data-v="share" aria-pressed="false">İl içindeki pay</button></div></div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h2 id="mapTitle">İlçelere göre vaka dağılımı</h2>
+      <p class="cap">Daire alanı vaka sayısını, renk seçilen ölçütü gösterir. Daireler ilçe sınırlarını değil, ilçenin yaklaşık merkezini işaretler. Merkez = İpekyolu + Tuşba.</p>
+      <div id="map"></div>
+      <div class="legend" id="mapLegend"></div>
+    </div>
+    <div class="card">
+      <h2>İlçe sıralaması</h2>
+      <p class="cap" id="rankCap">Yıllık ham hız (100.000 kişide), yüksekten düşüğe.</p>
+      <div id="rank"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>İlçe × kanser türü</h2>
+    <p class="cap" id="heatCap"></p>
+    <div style="margin-bottom:10px"><div class="seg" id="fHeat"><button data-v="lq" aria-pressed="true">Göreli yoğunluk (LQ)</button><button data-v="pct" aria-pressed="false">İlçe içi % dağılım</button></div></div>
+    <div id="heat" style="overflow-x:auto"></div>
+    <div class="legend" id="heatLegend"></div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h2>Kanser türleri, cinsiyete göre</h2>
+      <p class="cap">Seçili ilçe/yaş filtresiyle; vaka sayısı.</p>
+      <div id="sexbar"></div>
+      <div class="legend"><span><span class="sw" style="background:var(--women)"></span>Kadın</span><span><span class="sw" style="background:var(--men)"></span>Erkek</span></div>
+    </div>
+    <div class="card">
+      <h2>Tanı yaşı dağılımı</h2>
+      <p class="cap">5 yıllık yaş gruplarında vaka sayısı (seçili filtrelerle).</p>
+      <div id="agebar"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Yıllara göre vaka sayısı</h2>
+    <p class="cap">Tanı tarihine göre; 2011, 2012 ve 2019'da toplam 4 vaka var ve grafikte gösterilmiyor.</p>
+    <div id="yearbar"></div>
+  </div>
+
+  <div class="card">
+    <details>
+      <summary>Tablo görünümü (seçili filtrelerle ilçe özeti)</summary>
+      <div id="table" style="margin-top:12px;overflow-x:auto"></div>
+    </details>
+  </div>
+
+  <div class="card note">
+    <b style="color:var(--text-primary)">Yöntem ve sınırlılıklar</b>
+    <ul>
+      <li><b>Ham hız</b> = 2013–2018 vaka sayısı ÷ (2017 ilçe nüfusu × 6 yıl) × 100.000. Nüfus: TÜİK ADNKS 2017 (İŞKUR Van İl İşgücü Piyasası Raporu 2017, Tablo 1). Cinsiyet filtresinde cinsiyete özgü nüfus kullanılır; yaş filtresinde ilçe nüfusunun yaş dağılımı olmadığından hız yerine yalnızca vaka sayısı anlamlıdır.</li>
+      <li>Hızlar <b>yaşa göre standardize değildir</b>; yaşlı nüfusu fazla olan ilçelerde hız doğal olarak yüksek çıkar.</li>
+      <li>Veri setindeki toplam hız (~31/100 bin/yıl), Türkiye genelindeki kanser insidansının çok altındadır. Veri seti büyük olasılıkla tüm vakaları değil, bir kurumun ya da belirli 11 lokalizasyonun kayıtlarını içerir. Hızları gerçek insidans olarak değil, <b>ilçeler arası göreli karşılaştırma</b> olarak okuyun.</li>
+      <li>Küçük ilçelerde (Bahçesaray, Saray, Çatak) vaka sayısı düşük olduğundan hızlar ve LQ değerleri istatistiksel olarak oynaktır.</li>
+      <li>Merkez kayıtları İpekyolu ve Tuşba'yı birlikte kapsar (2013'te ayrılan eski Merkez ilçesi). Bir kayıt "Merkez" olarak küçük harfle girilmişti, MERKEZ ile birleştirildi.</li>
+      <li>Sayfa hasta düzeyinde kayıt içermez; yalnızca ilçe × cinsiyet × 5 yıllık yaş grubu × yıl × tür bazında toplulaştırılmış vaka sayılarını kullanır. Medyan yaş bu nedenle 5 yıllık grup olarak verilir.</li>
+      <li><b>LQ (konum katsayısı)</b> = bir türün ilçedeki payı ÷ aynı türün il genelindeki payı. 1'den büyükse tür o ilçede il ortalamasına göre daha sık görülür.</li>
+    </ul>
+  </div>
+</div>
+<div class="tip" id="tip"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script>
+const DATA = /*DATA*/;
+const PROV = /*PROV*/;
+const VAN = PROV.features.find(f=>f.properties.name==='Van').geometry;
+const NEIGH = PROV.features.filter(f=>f.properties.name!=='Van');
+const LAKES = /*LAKES*/;
+
+// 2017 TÜİK ADNKS (kadın, erkek)
+const POP = {
+ 'MERKEZ':[150028+75610,150768+81107], 'ERCİŞ':[83666,89405], 'EDREMİT':[62141,62234], 'ÖZALP':[32690,33805],
+ 'BAŞKALE':[25027,26946], 'ÇALDIRAN':[30853,32750], 'MURADİYE':[24547,26168], 'GÜRPINAR':[17267,17888],
+ 'GEVAŞ':[13880,13683], 'ÇATAK':[9909,10787], 'SARAY':[10086,10886], 'BAHÇESARAY':[7363,7395]
+};
+// yaklaşık ilçe merkezleri (lon, lat)
+const POS = {
+ 'MERKEZ':[43.50,38.57], 'ERCİŞ':[43.30,39.05], 'EDREMİT':[43.22,38.33], 'ÖZALP':[44.07,38.66],
+ 'BAŞKALE':[44.00,38.02], 'ÇALDIRAN':[44.00,39.15], 'MURADİYE':[43.78,39.02], 'GÜRPINAR':[43.62,38.22],
+ 'GEVAŞ':[42.98,38.24], 'ÇATAK':[43.10,38.00], 'SARAY':[44.28,38.40], 'BAHÇESARAY':[42.80,38.12]
+};
+const TR = s => s.charAt(0).toLocaleUpperCase('tr') + s.slice(1);
+const DN = s => s.toLocaleLowerCase('tr').replace(/(^|\s)\S/g, c=>c.toLocaleUpperCase('tr'));
+const YEARS = 6;
+const fmt1 = d3.format(',.1f'), fmt0 = d3.format(',');
+const locale = d3.formatLocale({decimal:',',thousands:'.',grouping:[3],currency:['','₺']});
+const f1 = locale.format(',.1f'), f0 = locale.format(','), f2 = locale.format(',.2f'), fp = locale.format('.1%');
+
+const D = DATA.districts, T = DATA.types;
+// Toplulaştırılmış küpü (ilçe, cinsiyet, 5 yıllık yaş grubu, yıl, tür, n) satırlara açar; a = yaş grubunun alt sınırı
+const R = DATA.cube.flatMap(c=>Array.from({length:c[5]},()=>({d:c[0],s:c[1],a:c[2],y:c[3],t:c[4]})));
+function medBin(rows){ if(!rows.length) return null; const s=rows.map(r=>r.a).sort((x,y)=>x-y); return s[Math.floor((s.length-1)/2)]; }
+const binLab = b => b==null ? '–' : (b>=90 ? '90+' : b+'–'+(b+4));
+const css = n => getComputedStyle(document.querySelector('.viz-root')).getPropertyValue(n).trim();
+
+const st = {type:'all', sex:'all', age:'all', metric:'rate', heat:'lq'};
+
+// filters
+const fType = document.getElementById('fType');
+fType.innerHTML = '<option value="all">Tümü</option>' + T.map((t,i)=>`<option value="${i}">${TR(t)}</option>`).join('');
+fType.onchange = e=>{st.type=e.target.value; render();};
+document.getElementById('fAge').onchange = e=>{st.age=e.target.value; render();};
+function seg(id,key){ const el=document.getElementById(id); el.querySelectorAll('button').forEach(b=>b.onclick=()=>{el.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b)); st[key]=b.dataset.v; render();}); }
+seg('fSex','sex'); seg('fMetric','metric'); seg('fHeat','heat');
+
+function ageOk(r){ if(st.age==='all') return true; const [a,b]=st.age.split('-').map(Number); return r.a>=a && r.a<=b; }
+function filt(opts={}){ return R.filter(r=>(opts.ignoreType||st.type==='all'||r.t==+st.type)&&(opts.ignoreSex||st.sex==='all'||r.s==+st.sex)&&ageOk(r)); }
+function popOf(name){ const p=POP[name]; return st.sex==='all'?p[0]+p[1]:p[+st.sex]; }
+const totalPop = () => D.reduce((s,n)=>s+popOf(n),0);
+
+// tooltip
+const tip = document.getElementById('tip');
+function showTip(ev,html){ tip.innerHTML=html; tip.style.opacity=1; moveTip(ev); }
+function moveTip(ev){ const w=tip.offsetWidth,h=tip.offsetHeight; let x=ev.clientX+14,y=ev.clientY+14; if(x+w>innerWidth-8)x=ev.clientX-w-14; if(y+h>innerHeight-8)y=ev.clientY-h-14; tip.style.left=x+'px'; tip.style.top=y+'px'; }
+function hideTip(){ tip.style.opacity=0; }
+
+function districtStats(){
+  const rows = filt();
+  const inPeriod = rows.filter(r=>r.y>=2013&&r.y<=2018);
+  const total = rows.length;
+  return D.map((name,i)=>{
+    const rr = rows.filter(r=>r.d===i);
+    const n = rr.length, np = inPeriod.filter(r=>r.d===i).length;
+    const pop = popOf(name);
+    const byT = d3.rollups(rr, v=>v.length, r=>r.t).sort((a,b)=>b[1]-a[1]);
+    return {name, i, n, rate: np/(pop*YEARS)*1e5, share: total? n/total:0, pop, top: byT.slice(0,3), medAge: medBin(rr), women: rr.filter(r=>r.s===0).length};
+  });
+}
+
+function kpis(){
+  const rows = filt(); const np = rows.filter(r=>r.y>=2013&&r.y<=2018).length;
+  const top = d3.rollups(rows,v=>v.length,r=>r.t).sort((a,b)=>b[1]-a[1])[0];
+  const w = rows.filter(r=>r.s===0).length;
+  const items = [
+    ['Vaka', f0(rows.length), st.type==='all'?'11 kanser türü':TR(T[+st.type])],
+    ['Yıllık ham hız', f1(np/(totalPop()*YEARS)*1e5), '100.000 kişide, Van geneli'],
+    ['Medyan tanı yaşı', binLab(medBin(rows)), 'yaş grubu (5 yıllık)'],
+    ['Kadın / Erkek', rows.length? `%${Math.round(w/rows.length*100)} / %${100-Math.round(w/rows.length*100)}`:'–', f0(w)+' kadın, '+f0(rows.length-w)+' erkek'],
+    ['En sık tür', top? TR(T[top[0]]):'–', top? f0(top[1])+' vaka ('+fp(top[1]/rows.length).replace('.',',')+')':'']
+  ];
+  document.getElementById('kpis').innerHTML = items.map(k=>`<div class="kpi"><div class="l">${k[0]}</div><div class="v">${k[1]}</div><div class="n">${k[2]}</div></div>`).join('');
+}
+
+// ---------- MAP ----------
+function rewind(g){ // d3 needs clockwise outer rings
+  const f = {type:'Feature',geometry:g};
+  if(d3.geoArea(f) > 2*Math.PI){
+    if(g.type==='Polygon') g.coordinates = g.coordinates.map(r=>r.slice().reverse());
+    else g.coordinates = g.coordinates.map(p=>p.map(r=>r.slice().reverse()));
+  }
+  return g;
+}
+rewind(VAN); NEIGH.forEach(n=>rewind(n.geometry));
+LAKES.coordinates.forEach((p,i)=>{ const g={type:'Polygon',coordinates:p}; rewind(g); LAKES.coordinates[i]=g.coordinates; });
+
+const mapEl = document.getElementById('map');
+const MW = 640, MH = 560;
+const msvg = d3.select(mapEl).append('svg').attr('viewBox',`0 0 ${MW} ${MH}`).attr('width','100%').attr('role','img').attr('aria-label','Van ilçeleri kanser kabarcık haritası');
+const proj = d3.geoMercator().fitExtent([[20,20],[MW-20,MH-20]], {type:'Feature',geometry:VAN});
+const path = d3.geoPath(proj);
+msvg.append('clipPath').attr('id','vp').append('rect').attr('width',MW).attr('height',MH);
+const base = msvg.append('g').attr('clip-path','url(#vp)');
+base.selectAll('path.n').data(NEIGH).join('path').attr('d',d=>path(d)).attr('fill','var(--land-other)').attr('stroke','var(--axis)').attr('stroke-width',0.6);
+base.append('path').attr('d',path({type:'Feature',geometry:VAN})).attr('fill','var(--land)').attr('stroke','var(--text-secondary)').attr('stroke-width',1.2);
+base.append('path').attr('d',path({type:'Feature',geometry:LAKES})).attr('fill','var(--lake)').attr('stroke','var(--lake-stroke)').attr('stroke-width',0.8);
+NEIGH.forEach(n=>{ const c = path.centroid(n); if(c[0]>10&&c[0]<MW-10&&c[1]>10&&c[1]<MH-10) base.append('text').attr('x',c[0]).attr('y',c[1]).attr('text-anchor','middle').style('fill','var(--muted)').style('font-size','11px').style('letter-spacing','.12em').text(n.properties.name.toLocaleUpperCase('tr')); });
+const lakeC = proj([42.95,38.68]);
+base.append('text').attr('x',lakeC[0]).attr('y',lakeC[1]).attr('text-anchor','middle').style('fill','var(--lake-stroke)').style('font-style','italic').style('font-size','13px').text('Van Gölü');
+const bubG = msvg.append('g'), labG = msvg.append('g');
+
+const SEQ = ['--s1','--s2','--s3','--s4','--s5'];
+function renderMap(stats){
+  const key = st.metric;
+  const vals = stats.map(s=>s[key]).filter(v=>v>0);
+  const q = d3.scaleQuantize().domain([0, d3.max(vals)||1]).range(SEQ);
+  // nice thresholds
+  const mx = d3.max(vals)||1;
+  const step = mx/5;
+  const color = v => css(SEQ[Math.min(4, Math.floor(v/step - 1e-9))] || SEQ[0]);
+  const rmax = d3.max(stats,s=>s.n)||1;
+  const r = d3.scaleSqrt().domain([0, Math.max(rmax, 1)]).range([0, 46]);
+  const data = stats.slice().sort((a,b)=>b.n-a.n);
+  bubG.selectAll('circle').data(data,d=>d.name).join('circle')
+    .attr('cx',d=>proj(POS[d.name])[0]).attr('cy',d=>proj(POS[d.name])[1])
+    .attr('stroke','var(--bubble-ring)').attr('stroke-width',2)
+    .on('mousemove',(ev,d)=>showTip(ev,tipHtml(d))).on('mouseleave',hideTip)
+    .transition().duration(350)
+    .attr('r',d=>d.n? Math.max(4,r(d.n)):0).attr('fill',d=>color(d[key]));
+  labG.selectAll('text').data(stats,d=>d.name).join('text')
+    .attr('x',d=>proj(POS[d.name])[0]).attr('y',d=>proj(POS[d.name])[1] + (d.n? Math.max(4,r(d.n)):0) + 13)
+    .attr('text-anchor','middle').style('fill','var(--text-primary)').style('font-size','11.5px').style('font-weight',600)
+    .style('paint-order','stroke').style('stroke','var(--land)').style('stroke-width','3px').style('pointer-events','none')
+    .text(d=>DN(d.name));
+  // legend
+  const lg = document.getElementById('mapLegend');
+  const fmtV = key==='rate'? f1 : (v=>'%'+f1(v*100));
+  let html = `<span style="color:var(--text-primary);font-weight:600">${key==='rate'?'Hız /100 bin/yıl':'İl içindeki pay'}</span>`;
+  for(let k=0;k<5;k++) html += `<span><span class="sw" style="background:var(${SEQ[k]})"></span>${fmtV(step*k)}–${fmtV(step*(k+1))}</span>`;
+  const ex = [Math.round(rmax/10), Math.round(rmax/2), rmax].filter((v,i,a)=>v>0&&a.indexOf(v)===i);
+  html += `<span style="margin-left:8px">Daire: ` + ex.map(v=>`<svg width="${2*r(v)+4}" height="${2*r(v)+4}" style="vertical-align:middle"><circle cx="${r(v)+2}" cy="${r(v)+2}" r="${r(v)}" fill="none" stroke="var(--muted)"/></svg> ${f0(v)}`).join(' ') + ' vaka</span>';
+  lg.innerHTML = html;
+  const tn = st.type==='all'? 'Tüm kanserler' : TR(T[+st.type])+' kanseri';
+  document.getElementById('mapTitle').textContent = tn + ' — ilçelere göre';
+}
+function tipHtml(d){
+  return `<b>${DN(d.name)}</b>${d.name==='MERKEZ'?' <span class="m">(İpekyolu+Tuşba)</span>':''}
+  <div class="row"><span class="m">Vaka</span><span>${f0(d.n)}</span></div>
+  <div class="row"><span class="m">Ham hız /100 bin/yıl</span><span>${f1(d.rate)}</span></div>
+  <div class="row"><span class="m">İl içindeki pay</span><span>%${f1(d.share*100)}</span></div>
+  <div class="row"><span class="m">Nüfus (2017)</span><span>${f0(d.pop)}</span></div>
+  ${d.n?`<div class="row"><span class="m">Medyan yaş</span><span>${binLab(d.medAge)}</span></div>`:''}
+  ${d.top.length && st.type==='all' ?`<div style="margin-top:6px" class="m">En sık türler</div>`+d.top.map(t=>`<div class="row"><span>${TR(T[t[0]])}</span><span>${f0(t[1])} (%${f1(t[1]/d.n*100)})</span></div>`).join(''):''}`;
+}
+
+// ---------- RANK ----------
+function renderRank(stats){
+  const key = st.metric;
+  const data = stats.slice().sort((a,b)=>b[key]-a[key]);
+  const el = document.getElementById('rank'); el.innerHTML='';
+  const W=420, rowH=30, M={l:92,r:56,t:4,b:4}, H=M.t+M.b+rowH*data.length;
+  const svg = d3.select(el).append('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('width','100%');
+  const x = d3.scaleLinear().domain([0,d3.max(data,d=>d[key])||1]).range([0,W-M.l-M.r]);
+  const g = svg.append('g').attr('transform',`translate(${M.l},${M.t})`);
+  const avg = key==='rate' ? (filt().filter(r=>r.y>=2013&&r.y<=2018).length/(totalPop()*YEARS)*1e5) : null;
+  const row = g.selectAll('g').data(data).join('g').attr('transform',(d,i)=>`translate(0,${i*rowH})`).attr('class','rank-row')
+     .on('mousemove',(ev,d)=>showTip(ev,tipHtml(d))).on('mouseleave',hideTip);
+  row.append('rect').attr('x',-M.l).attr('width',W).attr('height',rowH).attr('fill','transparent');
+  row.append('text').attr('x',-10).attr('y',rowH/2+4).attr('text-anchor','end').style('fill','var(--text-primary)').style('font-size','12px').text(d=>DN(d.name));
+  row.append('path').attr('d',d=>{const w=Math.max(0,x(d[key])), h=16, y=(rowH-h)/2, rr=Math.min(4,w); return `M0,${y}H${w-rr}Q${w},${y} ${w},${y+rr}V${y+h-rr}Q${w},${y+h} ${w-rr},${y+h}H0Z`;})
+     .attr('fill', 'var(--s3)');
+  row.append('text').attr('x',d=>x(d[key])+6).attr('y',rowH/2+4).style('font-variant-numeric','tabular-nums').style('fill','var(--text-secondary)').text(d=> key==='rate'? f1(d.rate) : '%'+f1(d.share*100));
+  if(avg!==null){
+    g.append('line').attr('x1',x(avg)).attr('x2',x(avg)).attr('y1',-2).attr('y2',H-M.b).attr('stroke','var(--text-secondary)').attr('stroke-dasharray','3 3');
+  }
+  document.getElementById('rankCap').innerHTML = key==='rate' ? `Yıllık ham hız (100.000 kişide). Kesikli çizgi: Van geneli (${f1(avg)}).` : 'Seçili vakaların ilçelere göre payı.';
+}
+
+// ---------- HEATMAP ----------
+function renderHeat(){
+  const rows = filt({ignoreType:true});
+  const el = document.getElementById('heat'); el.innerHTML='';
+  const tot = rows.length;
+  const tTot = T.map((_,j)=>rows.filter(r=>r.t===j).length);
+  const cells=[];
+  const dTot = D.map((_,i)=>rows.filter(r=>r.d===i).length);
+  D.forEach((dn,i)=>T.forEach((tn,j)=>{
+    const n = rows.filter(r=>r.d===i&&r.t===j).length;
+    const pct = dTot[i]? n/dTot[i]:0;
+    const lq = (dTot[i]&&tTot[j])? pct/(tTot[j]/tot) : null;
+    cells.push({i,j,n,pct,lq,dt:dTot[i]});
+  }));
+  const cw=66, ch=30, M={l:96,t:34,r:62};
+  const W=M.l+cw*T.length+M.r, H=M.t+ch*D.length+6;
+  const svg=d3.select(el).append('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('width',Math.max(W,700)).style('max-width','100%').style('min-width','760px');
+  const g=svg.append('g').attr('transform',`translate(${M.l},${M.t})`);
+  g.selectAll('text.c').data(T).join('text').attr('x',(d,j)=>j*cw+cw/2).attr('y',-10).attr('text-anchor','middle').style('fill','var(--text-primary)').style('font-size','11.5px').text(d=>TR(d));
+  g.selectAll('text.r').data(D).join('text').attr('x',-10).attr('y',(d,i)=>i*ch+ch/2+4).attr('text-anchor','end').style('fill','var(--text-primary)').style('font-size','12px').text((d,i)=>DN(d));
+  g.selectAll('text.t').data(D).join('text').attr('x',T.length*cw+8).attr('y',(d,i)=>i*ch+ch/2+4).style('fill','var(--muted)').style('font-variant-numeric','tabular-nums').text((d,i)=>'n='+f0(dTot[i]));
+  let col, legend;
+  if(st.heat==='lq'){
+    // diverging around 1 on log2 scale, clamp ±2 (=4x)
+    const stops=['--blue3','--blue2','--blue1','--mid','--red1','--red2','--red3'];
+    const bins=[-Infinity,Math.log2(1/2),Math.log2(1/1.5),Math.log2(1/1.15),Math.log2(1.15),Math.log2(1.5),Math.log2(2),Infinity];
+    col = c => { if(c.lq===null) return 'var(--surface-1)'; if(c.lq===0) return 'var(--'+'blue3)'; const v=Math.log2(c.lq); for(let k=0;k<7;k++){ if(v>=bins[k]&&v<bins[k+1]) return `var(${stops[k]})`; } return 'var(--mid)'; };
+    const labs=['<0,5','0,5–0,67','0,67–0,87','0,87–1,15','1,15–1,5','1,5–2','>2'];
+    legend = `<span style="color:var(--text-primary);font-weight:600">LQ</span>` + stops.map((s,k)=>`<span><span class="sw" style="background:var(${s});border:1px solid var(--border)"></span>${labs[k]}</span>`).join('') + `<span>· mavi: il ortalamasından az, kırmızı: fazla</span>`;
+    document.getElementById('heatCap').textContent = 'Her hücre, o kanser türünün ilçedeki payının il genelindeki payına oranıdır (LQ). Tür filtresi bu grafiği etkilemez; cinsiyet ve yaş filtreleri etkiler.';
+  } else {
+    const mx = d3.max(cells,c=>c.pct)||1, step=mx/5;
+    col = c => c.dt? `var(${SEQ[Math.min(4,Math.floor(c.pct/step-1e-9))]||SEQ[0]})` : 'var(--surface-1)';
+    legend = `<span style="color:var(--text-primary);font-weight:600">İlçe içi pay</span>` + SEQ.map((s,k)=>`<span><span class="sw" style="background:var(${s})"></span>%${f0(step*k*100)}–${f0(step*(k+1)*100)}</span>`).join('');
+    document.getElementById('heatCap').textContent = 'Her satır bir ilçenin vakalarının kanser türlerine dağılımıdır (satır toplamı %100). Tür filtresi bu grafiği etkilemez.';
+  }
+  const cell = g.selectAll('g.cell').data(cells).join('g').attr('transform',c=>`translate(${c.j*cw},${c.i*ch})`)
+    .on('mousemove',(ev,c)=>showTip(ev,`<b>${DN(D[c.i])} · ${TR(T[c.j])}</b>
+      <div class="row"><span class="m">Vaka</span><span>${f0(c.n)}</span></div>
+      <div class="row"><span class="m">İlçe içi pay</span><span>%${f1(c.pct*100)}</span></div>
+      <div class="row"><span class="m">İl genelindeki pay</span><span>%${f1(tTot[c.j]/tot*100)}</span></div>
+      <div class="row"><span class="m">LQ</span><span>${c.lq===null?'–':f2(c.lq)}</span></div>
+      ${c.n<5?'<div class="m" style="margin-top:4px">Az vaka: yorumlarken dikkat.</div>':''}`)).on('mouseleave',hideTip);
+  cell.append('rect').attr('x',1).attr('y',1).attr('width',cw-2).attr('height',ch-2).attr('rx',4).attr('fill',col);
+  cell.append('text').attr('x',cw/2).attr('y',ch/2+4).attr('text-anchor','middle').style('font-size','11px').style('font-variant-numeric','tabular-nums')
+    .style('fill',c=>{ const f=col(c); return (/s4|s5|blue3|red3/.test(f) && !document.documentElement.matches('[data-theme="dark"]') && !matchMedia('(prefers-color-scheme: dark)').matches) ? '#ffffff' : 'var(--text-primary)'; })
+    .text(c=> st.heat==='lq' ? (c.lq===null?'':f2(c.lq)) : (c.n? f0(c.n):''));
+  document.getElementById('heatLegend').innerHTML = legend;
+}
+
+// ---------- SEX BAR ----------
+function renderSex(){
+  const rows = filt({ignoreType:true, ignoreSex:true});
+  const el=document.getElementById('sexbar'); el.innerHTML='';
+  const data=T.map((t,j)=>({t:j,w:rows.filter(r=>r.t===j&&r.s===0).length,m:rows.filter(r=>r.t===j&&r.s===1).length})).sort((a,b)=>(b.w+b.m)-(a.w+a.m));
+  const W=520,rowH=28,M={l:84,r:40,t:4,b:22},H=M.t+M.b+rowH*data.length;
+  const svg=d3.select(el).append('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('width','100%');
+  const x=d3.scaleLinear().domain([0,d3.max(data,d=>Math.max(d.w,d.m))||1]).nice().range([0,W-M.l-M.r]);
+  const g=svg.append('g').attr('transform',`translate(${M.l},${M.t})`);
+  g.append('g').attr('class','gridl').attr('transform',`translate(0,${H-M.t-M.b})`).call(d3.axisBottom(x).ticks(5).tickSize(-(H-M.t-M.b)).tickFormat(''));
+  g.append('g').attr('class','axis').attr('transform',`translate(0,${H-M.t-M.b})`).call(d3.axisBottom(x).ticks(5).tickFormat(f0)).call(s=>s.select('.domain').remove());
+  const row=g.selectAll('g.r').data(data).join('g').attr('transform',(d,i)=>`translate(0,${i*rowH})`)
+    .on('mousemove',(ev,d)=>showTip(ev,`<b>${TR(T[d.t])}</b><div class="row"><span class="m">Kadın</span><span>${f0(d.w)}</span></div><div class="row"><span class="m">Erkek</span><span>${f0(d.m)}</span></div><div class="row"><span class="m">Toplam</span><span>${f0(d.w+d.m)}</span></div>`)).on('mouseleave',hideTip);
+  row.append('rect').attr('x',-M.l).attr('width',W).attr('height',rowH).attr('fill','transparent');
+  row.append('text').attr('x',-8).attr('y',rowH/2+4).attr('text-anchor','end').style('fill','var(--text-primary)').style('font-size','12px').text(d=>TR(T[d.t]));
+  const bar=(w,y,h)=>{const rr=Math.min(3,w);return `M0,${y}H${w-rr}Q${w},${y} ${w},${y+rr}V${y+h-rr}Q${w},${y+h} ${w-rr},${y+h}H0Z`;};
+  row.append('path').attr('d',d=>bar(Math.max(0,x(d.w)),4,9)).attr('fill','var(--women)');
+  row.append('path').attr('d',d=>bar(Math.max(0,x(d.m)),15,9)).attr('fill','var(--men)');
+}
+
+// ---------- AGE ----------
+function renderAge(){
+  const rows=filt(); const el=document.getElementById('agebar'); el.innerHTML='';
+  const bins=d3.range(0,95,5); const data=bins.map(b=>({b,n:rows.filter(r=>r.a>=b&&r.a<(b===90?200:b+5)).length}));
+  const W=520,H=260,M={l:36,r:8,t:10,b:30};
+  const svg=d3.select(el).append('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('width','100%');
+  const x=d3.scaleBand().domain(bins).range([M.l,W-M.r]).padding(0.12);
+  const y=d3.scaleLinear().domain([0,d3.max(data,d=>d.n)||1]).nice().range([H-M.b,M.t]);
+  svg.append('g').attr('class','gridl').attr('transform',`translate(${M.l},0)`).call(d3.axisLeft(y).ticks(5).tickSize(-(W-M.l-M.r)).tickFormat(''));
+  svg.append('g').attr('class','axis').attr('transform',`translate(${M.l},0)`).call(d3.axisLeft(y).ticks(5).tickFormat(f0)).call(s=>s.select('.domain').remove());
+  svg.append('g').attr('class','axis').attr('transform',`translate(0,${H-M.b})`).call(d3.axisBottom(x).tickValues(bins.filter(b=>b%10===0)).tickFormat(b=>b===90?'90+':b));
+  const g=svg.selectAll('g.b').data(data).join('g').on('mousemove',(ev,d)=>showTip(ev,`<b>${d.b===90?'90+':d.b+'–'+(d.b+4)} yaş</b><div class="row"><span class="m">Vaka</span><span>${f0(d.n)}</span></div>`)).on('mouseleave',hideTip);
+  g.append('rect').attr('x',d=>x(d.b)).attr('y',M.t).attr('width',x.bandwidth()).attr('height',H-M.b-M.t).attr('fill','transparent');
+  g.append('path').attr('d',d=>{const x0=x(d.b),w=x.bandwidth(),y0=y(d.n),b=y(0),rr=Math.min(4,(b-y0));return `M${x0},${b}V${y0+rr}Q${x0},${y0} ${x0+rr},${y0}H${x0+w-rr}Q${x0+w},${y0} ${x0+w},${y0+rr}V${b}Z`;}).attr('fill','var(--s3)');
+}
+
+// ---------- YEAR ----------
+function renderYear(){
+  const rows=filt().filter(r=>r.y>=2013&&r.y<=2018); const el=document.getElementById('yearbar'); el.innerHTML='';
+  const yrs=d3.range(2013,2019); const data=yrs.map(y=>({y,n:rows.filter(r=>r.y===y).length}));
+  const W=1100,H=220,M={l:40,r:10,t:16,b:28};
+  const svg=d3.select(el).append('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('width','100%');
+  const x=d3.scaleBand().domain(yrs).range([M.l,W-M.r]).padding(0.35);
+  const y=d3.scaleLinear().domain([0,d3.max(data,d=>d.n)||1]).nice().range([H-M.b,M.t]);
+  svg.append('g').attr('class','gridl').attr('transform',`translate(${M.l},0)`).call(d3.axisLeft(y).ticks(4).tickSize(-(W-M.l-M.r)).tickFormat(''));
+  svg.append('g').attr('class','axis').attr('transform',`translate(${M.l},0)`).call(d3.axisLeft(y).ticks(4).tickFormat(f0)).call(s=>s.select('.domain').remove());
+  svg.append('g').attr('class','axis').attr('transform',`translate(0,${H-M.b})`).call(d3.axisBottom(x).tickFormat(d=>d));
+  const g=svg.selectAll('g.b').data(data).join('g').on('mousemove',(ev,d)=>showTip(ev,`<b>${d.y}</b><div class="row"><span class="m">Vaka</span><span>${f0(d.n)}</span></div>`)).on('mouseleave',hideTip);
+  g.append('rect').attr('x',d=>x(d.y)-8).attr('y',M.t).attr('width',x.bandwidth()+16).attr('height',H-M.b-M.t).attr('fill','transparent');
+  g.append('path').attr('d',d=>{const x0=x(d.y),w=x.bandwidth(),y0=y(d.n),b=y(0),rr=Math.min(4,(b-y0));return `M${x0},${b}V${y0+rr}Q${x0},${y0} ${x0+rr},${y0}H${x0+w-rr}Q${x0+w},${y0} ${x0+w},${y0+rr}V${b}Z`;}).attr('fill','var(--s3)');
+  g.append('text').attr('x',d=>x(d.y)+x.bandwidth()/2).attr('y',d=>y(d.n)-6).attr('text-anchor','middle').style('font-variant-numeric','tabular-nums').text(d=>f0(d.n));
+}
+
+// ---------- TABLE ----------
+let sortKey='n', sortDir=-1;
+function renderTable(stats){
+  const cols=[['name','İlçe'],['pop','Nüfus 2017'],['n','Vaka'],['share','İl içi pay'],['rate','Hız /100 bin/yıl'],['women','Kadın'],['medAge','Medyan yaş grubu'],['top','En sık 3 tür']];
+  const data=stats.slice().sort((a,b)=>{ const va=a[sortKey], vb=b[sortKey]; if(sortKey==='name') return sortDir*va.localeCompare(vb,'tr'); if(sortKey==='top') return 0; return sortDir*((va||0)-(vb||0)); });
+  const fmtc={name:v=>DN(v)+(v==='MERKEZ'?' (İpekyolu+Tuşba)':''),pop:f0,n:f0,share:v=>'%'+f1(v*100),rate:f1,women:f0,medAge:binLab,top:v=>v.map(t=>TR(T[t[0]])+' ('+t[1]+')').join(', ')};
+  const el=document.getElementById('table');
+  el.innerHTML=`<table><thead><tr>${cols.map(c=>`<th data-k="${c[0]}">${c[1]}${sortKey===c[0]?(sortDir<0?' ▾':' ▴'):''}</th>`).join('')}</tr></thead><tbody>${data.map(d=>`<tr>${cols.map(c=>`<td${c[0]==='top'?' style="text-align:left"':''}>${fmtc[c[0]](d[c[0]])}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  el.querySelectorAll('th').forEach(th=>th.onclick=()=>{ const k=th.dataset.k; if(k==='top')return; if(sortKey===k) sortDir*=-1; else {sortKey=k; sortDir=k==='name'?1:-1;} renderTable(districtStats()); });
+}
+
+function render(){ const s=districtStats(); kpis(); renderMap(s); renderRank(s); renderHeat(); renderSex(); renderAge(); renderYear(); renderTable(s); }
+render();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+</script>
+</body>
+</html>
